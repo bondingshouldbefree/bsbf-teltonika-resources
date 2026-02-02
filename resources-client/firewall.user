@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025-2026 Chester A. Unal <chester.a.unal@arinc9.com>
+
+# Create new chain
+iptables -t mangle -N PROXY
+
+# Set local IPv4 address destinations to bypass the proxy
+iptables -t mangle -A PROXY -d 0.0.0.0/8 -j RETURN
+iptables -t mangle -A PROXY -d 10.0.0.0/8 -j RETURN
+iptables -t mangle -A PROXY -d 100.64.0.0/10 -j RETURN
+iptables -t mangle -A PROXY -d 127.0.0.0/8 -j RETURN
+iptables -t mangle -A PROXY -d 169.254.0.0/16 -j RETURN
+iptables -t mangle -A PROXY -d 172.16.0.0/12 -j RETURN
+iptables -t mangle -A PROXY -d 192.0.0.0/24 -j RETURN
+iptables -t mangle -A PROXY -d 192.0.2.0/24 -j RETURN
+iptables -t mangle -A PROXY -d 192.88.99.0/24 -j RETURN
+iptables -t mangle -A PROXY -d 192.168.0.0/16 -j RETURN
+iptables -t mangle -A PROXY -d 198.18.0.0/15 -j RETURN
+iptables -t mangle -A PROXY -d 198.51.100.0/24 -j RETURN
+iptables -t mangle -A PROXY -d 203.0.113.0/24 -j RETURN
+iptables -t mangle -A PROXY -d 224.0.0.0/4 -j RETURN
+iptables -t mangle -A PROXY -d 240.0.0.0/4 -j RETURN
+
+# Anything else should be redirected to the port dokodemo-door listens on
+iptables -t mangle -A PROXY -p tcp -m addrtype ! --dst-type LOCAL -j TPROXY --on-port 12345 --on-ip 127.0.0.1 --tproxy-mark 1
+iptables -t mangle -A PROXY -p udp -m addrtype ! --dst-type LOCAL -j TPROXY --on-port 12345 --on-ip 127.0.0.1 --tproxy-mark 1
+
+# Jump to transparent proxy
+iptables -t mangle -A PREROUTING -j PROXY
