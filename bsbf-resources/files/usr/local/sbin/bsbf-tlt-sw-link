@@ -1,0 +1,26 @@
+#!/bin/sh
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Chester A. Unal <chester.a.unal@arinc9.com>
+
+logread -f -e "Switch Events: Port link state of port LAN" | while read -r line; do
+	# Find the LAN number.
+	lan_num=$(echo "$line" | awk '{gsub(/[^0-9]/, "", $15); print $15}')
+
+	# Find the section for the port.
+	network=$(uci show network)
+	section=$(echo "$network" | grep "ports='0t $lan_num'" | cut -d. -f2)
+
+	# If section is empty, this is not a targeted port. Continue.
+	[ -z "$section" ] && continue
+
+	# Get the VLAN ID for the port.
+	vid=$(uci get network.$section.vid)
+
+	# Find the network name for eth0.$vid.
+	net_name=$(echo "$network" | grep "device='eth0.$vid'" | cut -d. -f2)
+
+	# Save the UP or DOWN state which is always the last field.
+	state=$(echo "$line" | awk '{print $NF}')
+	[ "$state" = "UP" ] && ifup "$net_name"
+	[ "$state" = "DOWN" ] && ifdown "$net_name"
+done

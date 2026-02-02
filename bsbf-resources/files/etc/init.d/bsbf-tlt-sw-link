@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 Chester A. Unal <chester.a.unal@arinc9.com>
+
+START=99
+USE_PROCD=1
+
+start_service() {
+	procd_open_instance "bsbf-tlt-sw-link"
+	procd_set_param command "/usr/local/sbin/bsbf-tlt-sw-link"
+	procd_close_instance
+}
